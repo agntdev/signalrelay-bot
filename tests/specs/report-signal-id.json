@@ -1,0 +1,20 @@
+[
+  {
+    "name": "Report",
+    "steps": [
+      {
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "Report a specific signal to admins"
+            }
+          }
+        ],
+        "send": {
+          "callback": "report:signal_id"
+        }
+      }
+    ]
+  }
+]
