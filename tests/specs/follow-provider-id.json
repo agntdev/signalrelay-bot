@@ -1,19 +1,13 @@
 [
   {
-    "name": "Follow",
+    "name": "Follow shows provider not found",
     "steps": [
       {
+        "send": { "callback": "follow:provider_id" },
         "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Subscribe to a provider's alerts"
-            }
-          }
-        ],
-        "send": {
-          "callback": "follow:provider_id"
-        }
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText", "payload": { "text": "Provider not found." } }
+        ]
       }
     ]
   }

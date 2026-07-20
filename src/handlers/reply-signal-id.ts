@@ -1,17 +1,67 @@
 import { Composer } from "grammy";
+import type { Ctx } from "../bot.js";
+import { inlineButton, inlineKeyboard } from "../toolkit/index.js";
+import { getSignal, getProvider } from "../store.js";
 
-// SCAFFOLD — generated from the bot blueprint BEFORE the agent runs.
-// Keep a LIVE registration (.command / .callbackQuery / …) so this feature is
-// never an empty stub. Replace the reply body with real logic + copy; if you
-// change the user-facing text, update tests/specs to match EXACTLY.
-// Do NOT rewrite src/bot.ts — buildBot() already auto-loads this module.
-// Menu: wire this into /start via registerMainMenuItem({ label: "Reply to provider", data: "reply:signal_id" }) if the toolkit exposes it.
+const composer = new Composer<Ctx>();
 
-const composer = new Composer();
+const backToMenu = inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]);
 
-composer.callbackQuery("reply:signal_id", async (ctx) => {
+composer.callbackQuery(/^reply:(.+)$/, async (ctx) => {
   await ctx.answerCallbackQuery();
-  await ctx.reply("Send a message to the provider through the bot");
+  const signalId = ctx.match![1];
+  const signal = await getSignal(signalId);
+  if (!signal) {
+    await ctx.editMessageText("Signal not found.", { reply_markup: backToMenu });
+    return;
+  }
+  const provider = await getProvider(signal.provider_id);
+  if (!provider) {
+    await ctx.editMessageText("Provider not found.", { reply_markup: backToMenu });
+    return;
+  }
+
+  ctx.session.step = `awaiting_reply:${signalId}`;
+  await ctx.reply(`Type your message to ${provider.display_name}:`, {
+    reply_markup: { force_reply: true, input_field_placeholder: "Type your message…" },
+  });
+});
+
+composer.on("message:text", async (ctx, next) => {
+  const step = ctx.session.step;
+  if (!step || !step.startsWith("awaiting_reply:")) return next();
+
+  const signalId = step.split(":")[1];
+  const messageText = ctx.message.text.trim();
+  ctx.session.step = undefined;
+
+  if (messageText.length === 0) {
+    await ctx.reply("Message can't be empty. Try again.", { reply_markup: backToMenu });
+    return;
+  }
+
+  const signal = await getSignal(signalId);
+  if (!signal) {
+    await ctx.reply("Signal not found.", { reply_markup: backToMenu });
+    return;
+  }
+
+  const provider = await getProvider(signal.provider_id);
+  if (!provider) {
+    await ctx.reply("Provider not found.", { reply_markup: backToMenu });
+    return;
+  }
+
+  try {
+    await ctx.api.sendMessage(
+      provider.user_id,
+      `Anonymous message from a follower:\n\n${messageText}`,
+    );
+  } catch {
+    // Provider may have blocked the bot — don't abort
+  }
+
+  await ctx.reply("Message sent!", { reply_markup: backToMenu });
 });
 
 export default composer;

@@ -1,19 +1,17 @@
 [
   {
-    "name": "/following",
+    "name": "/following shows empty state",
     "steps": [
       {
+        "send": { "text": "/following" },
         "expect": [
           {
             "method": "sendMessage",
             "payload": {
-              "text": "View and manage followed providers"
+              "text": "You're not following any providers yet. Tap 🔍 Browse to find one."
             }
           }
-        ],
-        "send": {
-          "text": "/following"
-        }
+        ]
       }
     ]
   }

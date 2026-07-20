@@ -1,19 +1,17 @@
 [
   {
-    "name": "/search",
+    "name": "/search prompts for query",
     "steps": [
       {
+        "send": { "text": "/search" },
         "expect": [
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Search for providers by name or description"
+              "text": "What provider are you looking for? Type a name or keyword."
             }
           }
-        ],
-        "send": {
-          "text": "/search"
-        }
+        ]
       }
     ]
   }

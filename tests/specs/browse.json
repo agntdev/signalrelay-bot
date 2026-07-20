@@ -1,19 +1,17 @@
 [
   {
-    "name": "/browse",
+    "name": "/browse shows provider list",
     "steps": [
       {
+        "send": { "text": "/browse" },
         "expect": [
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Browse available providers"
+              "text": "No providers available yet. Check back soon!"
             }
           }
-        ],
-        "send": {
-          "text": "/browse"
-        }
+        ]
       }
     ]
   }

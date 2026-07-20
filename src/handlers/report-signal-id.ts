@@ -1,17 +1,44 @@
 import { Composer } from "grammy";
+import type { Ctx } from "../bot.js";
+import { inlineButton, inlineKeyboard } from "../toolkit/index.js";
+import { getSignal, createReport, getProvider, getAdminIds } from "../store.js";
 
-// SCAFFOLD — generated from the bot blueprint BEFORE the agent runs.
-// Keep a LIVE registration (.command / .callbackQuery / …) so this feature is
-// never an empty stub. Replace the reply body with real logic + copy; if you
-// change the user-facing text, update tests/specs to match EXACTLY.
-// Do NOT rewrite src/bot.ts — buildBot() already auto-loads this module.
-// Menu: wire this into /start via registerMainMenuItem({ label: "Report", data: "report:signal_id" }) if the toolkit exposes it.
+const composer = new Composer<Ctx>();
 
-const composer = new Composer();
+const backToMenu = inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]);
 
-composer.callbackQuery("report:signal_id", async (ctx) => {
+composer.callbackQuery(/^report:(.+)$/, async (ctx) => {
   await ctx.answerCallbackQuery();
-  await ctx.reply("Report a specific signal to admins");
+  const signalId = ctx.match![1];
+  const signal = await getSignal(signalId);
+  if (!signal) {
+    await ctx.editMessageText("Signal not found.", { reply_markup: backToMenu });
+    return;
+  }
+
+  const report = await createReport({
+    signal_id: signalId,
+    user_id: ctx.from!.id,
+  });
+
+  const provider = await getProvider(signal.provider_id);
+  const providerName = provider?.display_name ?? "Unknown";
+
+  const adminIds = getAdminIds();
+  for (const adminId of adminIds) {
+    try {
+      await ctx.api.sendMessage(
+        adminId,
+        `Report #${report.report_id} filed against signal from ${providerName}:\n\n"${signal.content}"\n\nReported by user: ${ctx.from!.id}`,
+      );
+    } catch {
+      // skip unreachable admins
+    }
+  }
+
+  await ctx.editMessageText("Report submitted. Our team will review it.", {
+    reply_markup: backToMenu,
+  });
 });
 
 export default composer;

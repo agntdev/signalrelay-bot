@@ -1,19 +1,13 @@
 [
   {
-    "name": "Report",
+    "name": "Report shows signal not found",
     "steps": [
       {
+        "send": { "callback": "report:signal_id" },
         "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Report a specific signal to admins"
-            }
-          }
-        ],
-        "send": {
-          "callback": "report:signal_id"
-        }
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText", "payload": { "text": "Signal not found." } }
+        ]
       }
     ]
   }
