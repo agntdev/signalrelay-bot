@@ -1,19 +1,17 @@
 [
   {
-    "name": "/become_provider",
+    "name": "/become_provider asks for a display name",
     "steps": [
       {
+        "send": { "text": "/become_provider" },
         "expect": [
           {
             "method": "sendMessage",
             "payload": {
-              "text": "Request to become a signal provider"
+              "text": "What display name should followers see?"
             }
           }
-        ],
-        "send": {
-          "text": "/become_provider"
-        }
+        ]
       }
     ]
   }

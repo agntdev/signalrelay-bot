@@ -1,19 +1,13 @@
 [
   {
-    "name": "Reply to provider",
+    "name": "Reply to provider shows signal not found",
     "steps": [
       {
+        "send": { "callback": "reply:signal_id" },
         "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Send a message to the provider through the bot"
-            }
-          }
-        ],
-        "send": {
-          "callback": "reply:signal_id"
-        }
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText", "payload": { "text": "Signal not found." } }
+        ]
       }
     ]
   }

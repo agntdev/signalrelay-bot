@@ -1,17 +1,46 @@
 import { Composer } from "grammy";
+import type { Ctx } from "../bot.js";
+import { inlineButton, inlineKeyboard } from "../toolkit/index.js";
+import { getProvider, follow, addFollowerIndex, isFollowing } from "../store.js";
 
-// SCAFFOLD — generated from the bot blueprint BEFORE the agent runs.
-// Keep a LIVE registration (.command / .callbackQuery / …) so this feature is
-// never an empty stub. Replace the reply body with real logic + copy; if you
-// change the user-facing text, update tests/specs to match EXACTLY.
-// Do NOT rewrite src/bot.ts — buildBot() already auto-loads this module.
-// Menu: wire this into /start via registerMainMenuItem({ label: "Follow", data: "follow:provider_id" }) if the toolkit exposes it.
+const composer = new Composer<Ctx>();
 
-const composer = new Composer();
-
-composer.callbackQuery("follow:provider_id", async (ctx) => {
+composer.callbackQuery(/^follow:(.+)$/, async (ctx) => {
   await ctx.answerCallbackQuery();
-  await ctx.reply("Subscribe to a provider's alerts");
+  const providerId = ctx.match![1];
+  const provider = await getProvider(providerId);
+
+  if (!provider) {
+    await ctx.editMessageText("Provider not found.", {
+      reply_markup: inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]),
+    });
+    return;
+  }
+
+  if (!provider.approved) {
+    await ctx.editMessageText("This provider is not approved yet.", {
+      reply_markup: inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]),
+    });
+    return;
+  }
+
+  const alreadyFollowing = await isFollowing(ctx.from!.id, providerId);
+  if (alreadyFollowing) {
+    await ctx.editMessageText(`You're already following ${provider.display_name}.`, {
+      reply_markup: inlineKeyboard([
+        [inlineButton("Unfollow", `unfollow:${providerId}`)],
+        [inlineButton("⬅️ Back to menu", "menu:main")],
+      ]),
+    });
+    return;
+  }
+
+  await follow(ctx.from!.id, providerId);
+  await addFollowerIndex(ctx.from!.id, providerId);
+
+  await ctx.editMessageText(`Now following ${provider.display_name}. You'll receive their alerts.`, {
+    reply_markup: inlineKeyboard([[inlineButton("⬅️ Back to menu", "menu:main")]]),
+  });
 });
 
 export default composer;

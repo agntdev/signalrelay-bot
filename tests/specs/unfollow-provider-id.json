@@ -1,19 +1,13 @@
 [
   {
-    "name": "Unfollow",
+    "name": "Unfollow shows provider not found",
     "steps": [
       {
+        "send": { "callback": "unfollow:provider_id" },
         "expect": [
-          {
-            "method": "sendMessage",
-            "payload": {
-              "text": "Unsubscribe from a provider's alerts"
-            }
-          }
-        ],
-        "send": {
-          "callback": "unfollow:provider_id"
-        }
+          { "method": "answerCallbackQuery" },
+          { "method": "editMessageText", "payload": { "text": "Provider not found." } }
+        ]
       }
     ]
   }
