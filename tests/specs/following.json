@@ -1,0 +1,20 @@
+[
+  {
+    "name": "/following",
+    "steps": [
+      {
+        "expect": [
+          {
+            "method": "sendMessage",
+            "payload": {
+              "text": "View and manage followed providers"
+            }
+          }
+        ],
+        "send": {
+          "text": "/following"
+        }
+      }
+    ]
+  }
+]
